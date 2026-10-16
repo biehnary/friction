@@ -16,4 +16,3 @@ fun logLaunchableApps(context: Context) {
         Log.d("Launchable Apps", packageName)
     }
 }
-I

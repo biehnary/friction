@@ -188,9 +188,10 @@ fun timeGateFriction(timeGateConfig: TimeGateConfig) {
 package com.biehnary.friction.runtime
 
 import android.view.accessibility.AccessibilityEvent
+import com.biehnary.friction.FrictionAccessibilityService
 import com.biehnary.friction.domain.AccessMode
 
-class FrictionRuntime (private val exit: () -> Unit){
+class FrictionRuntime(accessibilityService: FrictionAccessibilityService) {
 
     fun handleEvent(event: AccessibilityEvent) {
         val packageName = event.packageName
@@ -210,15 +211,16 @@ class FrictionRuntime (private val exit: () -> Unit){
 
                     }
                 }
+
                 AccessMode.TIME_GATE -> {
                     timeGateFriction(timeGateConfig)
                 }
 
             }
         }
-        }
-
     }
+
+}
 }app/src/main/java/com/biehnary/friction/runtime/SessionLimitFriction.kt
 package com.biehnary.friction.runtime
 
@@ -237,7 +239,47 @@ suspend fun sessionLimitFriction(sessionLimitConfig: SessionLimitConfig) {
     home()
      */
 
-}app/src/main/java/com/biehnary/friction/LaunchableApps.kt
+}app/src/main/java/com/biehnary/friction/runtime/Choice.kt
+package com.biehnary.friction.runtime
+
+import android.view.WindowManager
+import com.biehnary.friction.domain.ChoiceOption
+import kotlinx.coroutines.suspendCancellableCoroutine
+
+// 선택지를 입력받아 표시하고 사용자 선택 결과를 반환한다.
+// Coroutine 취소 시 Overlay를 정리한다.
+    /*
+    Overlay 생성
+    입력 받은 선택지 출력
+
+    입력 대기 suspend
+    각 선택에 따른 결과 수집
+    Overlay 제거
+
+    Coroutine 취소 시에도 Overlay 제거 보장
+
+    home, 앱 전환, 화면 꺼짐, 실행 목록 task 제거, 전화나 타앱 interrupt
+     */
+suspend fun choice(
+    windowManager: WindowManager,
+    // enum type list 전달
+    options: List<ChoiceOption>
+    ) {
+    // 선택지 ui
+    windowManager.addView()
+
+    suspendCancellableCoroutine { continuation ->
+
+        Button
+    }
+
+
+
+
+
+
+}
+app/src/main/java/com/biehnary/friction/LaunchableApps.kt
 package com.biehnary.friction
 
 import android.content.Context
@@ -301,13 +343,32 @@ package com.biehnary.friction.domain
 enum class AccessMode {
     FRICTION,
     TIME_GATE
+}app/src/main/java/com/biehnary/friction/domain/ChoiceOption.kt
+package com.biehnary.friction.domain
+
+enum class ChoiceOption {
+    // intent
+    INTENTIONAL_REST,
+    NECESSARY_USE,
+    IMPULSIVE_USE,
+
+    CONTINUE,
+    EXIT
 }app/src/main/java/com/biehnary/friction/FrictionAccessibilityService.kt
 package com.biehnary.friction
 
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
+import com.biehnary.friction.runtime.FrictionRuntime
 
-class FrictionAccessibilityService: AccessibilityService() {
+class FrictionAccessibilityService : AccessibilityService() {
+
+    private lateinit var runtime: FrictionRuntime
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        runtime = FrictionRuntime(this)
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         // TODO("Not yet implemented")
@@ -315,5 +376,9 @@ class FrictionAccessibilityService: AccessibilityService() {
 
     override fun onInterrupt() {
         // TODO("Not yet implemented")
+    }
+
+    fun exitToHome() {
+        performGlobalAction(GLOBAL_ACTION_HOME)
     }
 }
